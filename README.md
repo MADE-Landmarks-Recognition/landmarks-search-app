@@ -27,7 +27,7 @@
 
 
 ### DELF Experiments
-| # Classes 	| Model 	| Img_size 	| GAP   	| MAP   	| MRR@1 	| MRR@3 	| MRR@5 	| Precision@1 	| Precision@3 	| Precision@5 	| RAM required 	|
+| Classes 	| Model 	| Img_size 	| GAP   	| MAP   	| MRR@1 	| MRR@3 	| MRR@5 	| P@1 	| P@3 	| P@5 	| RAM required 	|
 |-----------	|-------	|----------	|-------	|-------	|-------	|-------	|-------	|-------------	|-------------	|-------------	|--------------	|
 | 7003      	| EffB0 	| 256      	| 0.633 	| 0.857 	| 0.854 	| 0.869 	| 0.876 	| 0.854       	| 0.738       	| 0.644       	| 32 Gb        	|
 | 2973      	| EffB0 	| 224      	| 0.705 	| 0.896 	| 0.900 	| 0.909 	| 0.913 	| 0.900       	| 0.799       	| 0.716       	| 24 Gb        	|
