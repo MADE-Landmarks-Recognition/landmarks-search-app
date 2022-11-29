@@ -1,0 +1,24 @@
+version: '3'
+services:
+  flask:
+    container_name: landmarks-search
+    build: .
+    environment:
+      - FLASK_APP=hello.py
+      - FLASK_DEBUG=1
+      - PYTHONBUFFERED=True
+    # change gunicorn to streamlit starter (!)
+    command: poetry run gunicorn -b 0.0.0.0:5000 hello:app --reload
+    ports:
+      - "5234:5000"
+    volumes:
+      - ./:/landmarks_app
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities:
+              - gpu
+              - utility # nvidia-smi
+              - compute # CUDA. Required to avoid "CUDA version: N/A"
