@@ -1,116 +1,60 @@
-import cv2
-import streamlit as st
-import numpy as np
-from PIL import Image
 import os
-import pickle
 
-import pandas as pd
-from scipy import spatial
-from scipy.spatial import cKDTree
-from app_utils import get_model, get_faiss_index, get_mapping
-from torchvision import transforms
+import numpy as np
+import streamlit as st
+from PIL import Image
+
+from src.model import Recognizer
 
 
 # config
-IMG_DIR = "./data/train10k/"
-UPL_DIR = "./data/uploaded/"
-IMG_SIZE = 256
-CROP_SIZE = 224
+IMG_DIR = "../data/train10k/"
+UPL_DIR = "../data/uploaded/"
+IMG_SIZE = 224
 TOP_K = 5
 DEVICE = "cuda"
+CHECKPOINT_PATH = "./checkpoints/extractor.torchscript"
+DUMP_PATH = "./checkpoints/landmarks_db"
 
+if not os.path.exists(UPL_DIR):
+    os.makedirs(UPL_DIR)
 
 st.set_page_config(
     layout="wide",
-    page_title='Landmarks',
+    page_title="Landmarks",
 )
 
 
 @st.cache(allow_output_mutation=True)
 def load_model():
-    model = get_model()
-    return model
-
-
-@st.cache(allow_output_mutation=True)
-def load_faiss_index():
-    faiss_index = get_faiss_index()
-    return faiss_index
-
-
-@st.cache(allow_output_mutation=True)
-def load_mapping():
-    mapping = get_mapping()
-    return mapping
+    return Recognizer(CHECKPOINT_PATH, DUMP_PATH, DEVICE, (IMG_SIZE, IMG_SIZE))
 
 
 def get_image(path):
-    image = cv2.imread(path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = Image.open(path).convert("RGB")
     return image
 
 
-def transform_image(image):
-    trans = transforms.Compose([
-    transforms.Resize((IMG_SIZE, IMG_SIZE)),
-    transforms.CenterCrop(CROP_SIZE),
-    transforms.ToTensor(),
-    transforms.Normalize(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225]),
-    ])
-    return trans(image)
-
-
-
-def st_get_top_similar(image_emb, faiss_index, mapping, top_n=10):
-    _, prediction = faiss_index.search(image_emb.reshape(1, -1), k=top_n)
-    top_similar = {
-        "names": [],
-        "ids": []
-    }
-
-    for idx in prediction[0]:
-        top_similar["ids"].append(mapping[idx][0])
-        name = mapping[idx][1]
-        image_path = f"{IMG_DIR}{name[0]}/{name[1]}/{name[2]}/{name}"
-        top_similar["names"].append(image_path)
-
+def st_get_top_similar(
+    image: np.ndarray,
+    recognizer: Recognizer,
+    k=TOP_K,
+):
+    sims, ids, names = recognizer.find_similar(image, k=k)
+    names = [f"{IMG_DIR}{name[0]}/{name[1]}/{name[2]}/{name}" for name in names[0]]
+    top_similar = {"names": names, "ids": ids[0]}
     return top_similar
 
 
-def st_get_image_emb(image, emb_model):
-    image_emb = emb_model(image.to(DEVICE).unsqueeze(0))
-    return image_emb
-
-
-
-@st.cache(allow_output_mutation=True)
-def get_df_ids():
-    current_path = os.getcwd()
-    label_to_category = os.path.join(current_path, 'data/train10k/train_label_to_category.csv')
-    train10k_ids = os.path.join(current_path, 'data/train10k/train10k.csv')
-    df = pd.read_csv(label_to_category)
-    df_ids = pd.read_csv(train10k_ids)
-    return df, df_ids
-
-
 def main():
-    st.title('Landmarks retrieval')
-    st.subheader('MADE-2022')
-
-    ### Load datasets
-    df, df_ids = get_df_ids()
-    st.write('Datasets loaded:', df.shape, df_ids.shape)
+    st.title("Landmarks retrieval")
+    st.subheader("MADE-2022")
 
     ### Load artifacts
-    emb_model = load_model()
-    faiss_index = load_faiss_index()
-    mapping = load_mapping()
+    recognizer = load_model()
 
     ### Load image
-    image_file = st.file_uploader('Upload your Image', type=['jpg','png', 'jpeg'])
+    image_file = st.file_uploader("Upload your Image", type=["jpg", "png", "jpeg"])
     if not image_file:
         return None
     image = Image.open(image_file)
@@ -119,16 +63,14 @@ def main():
 
     # check that all is ok
     image = get_image(save_path)
-    st.image(image, caption='Uploaded Image without CROP and RESIZE.', use_column_width=False)
-    image = transform_image(image)
-    image_emb = st_get_image_emb(image, emb_model)
+    st.image(
+        image, caption="Uploaded Image without CROP and RESIZE.", use_column_width=False
+    )
 
-    # mapping -> df, df_ids
-    top_similar = st_get_top_similar(image_emb, faiss_index, mapping, top_n=TOP_K)
-    st.write('Similar images:', top_similar["ids"])
+    top_similar = st_get_top_similar(image, recognizer, k=TOP_K)
+    st.write("Similar images:", top_similar["ids"])
     st.image(top_similar["names"], top_similar["ids"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

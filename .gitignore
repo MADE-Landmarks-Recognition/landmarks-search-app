@@ -133,3 +133,7 @@ dmypy.json
 
 # Training data
 /data/*
+*.index
+*.faiss
+*.npz
+*.torchscript

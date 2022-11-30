@@ -1,5 +1,14 @@
 # landmarks-search-app
 
+# How to run
+## Locally
+...
+
+## With Docker
+...
+
+# Download checkpoints
+- [DeiT Roadmap on 10k landmarks](https://drive.google.com/file/d/1VNXP6X7YCUmzR9QGnm0Gwxy6MW3DHrOw/view?usp=share_link)
 
 # Metrics
 ## Image recognition 10k
