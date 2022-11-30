@@ -1,11 +1,14 @@
 # landmarks-search-app
 
 # How to run
-## Locally
-...
+## Install requirements (for example, via poetry)
+poetry install
 
-## With Docker
-...
+## Locally
+streamlit run landmarks_app.py
+
+## With Docker (check that CUDA available or use another base image)
+docker compose up (--build)
 
 # Download checkpoints
 - [DeiT Roadmap on 10k landmarks](https://drive.google.com/file/d/1VNXP6X7YCUmzR9QGnm0Gwxy6MW3DHrOw/view?usp=share_link)

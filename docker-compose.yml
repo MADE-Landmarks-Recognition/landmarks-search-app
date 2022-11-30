@@ -3,14 +3,9 @@ services:
   flask:
     container_name: landmarks-search
     build: .
-    environment:
-      - FLASK_APP=hello.py
-      - FLASK_DEBUG=1
-      - PYTHONBUFFERED=True
-    # change gunicorn to streamlit starter (!)
-    command: poetry run gunicorn -b 0.0.0.0:5000 hello:app --reload
+    command: poetry run streamlit run landmarks_app.py
     ports:
-      - "5234:5000"
+      - "5234:8501"
     volumes:
       - ./:/landmarks_app
     deploy:

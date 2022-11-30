@@ -8,8 +8,8 @@ from src.model import Recognizer
 
 
 # config
-IMG_DIR = "../data/train10k/"
-UPL_DIR = "../data/uploaded/"
+IMG_DIR = "./data/train10k/"
+UPL_DIR = "./data/uploaded/"
 IMG_SIZE = 224
 TOP_K = 5
 DEVICE = "cuda"
@@ -61,15 +61,42 @@ def main():
     save_path = os.path.join(UPL_DIR, image_file.name)
     image.save(save_path)
 
+    col1, col2 = st.columns(2)
+
     # check that all is ok
     image = get_image(save_path)
-    st.image(
-        image, caption="Uploaded Image without CROP and RESIZE.", use_column_width=False
-    )
+    with col1:
+        st.image(
+            image, caption="Uploaded Image without CROP and RESIZE.",
+            use_column_width=True,
+        )
 
     top_similar = st_get_top_similar(image, recognizer, k=TOP_K)
-    st.write("Similar images:", top_similar["ids"])
-    st.image(top_similar["names"], top_similar["ids"])
+    with col2:
+        st.write("Similar images:", top_similar["ids"])
+    # st.image(top_similar["names"], top_similar["ids"], width=224)
+
+    col1, col2, col3, col4, col5 = st.columns(5)
+
+    with col1:
+        st.header(top_similar["ids"][0])
+        st.image(top_similar["names"][0])
+
+    with col2:
+        st.header(top_similar["ids"][1])
+        st.image(top_similar["names"][1])
+
+    with col3:
+        st.header(top_similar["ids"][2])
+        st.image(top_similar["names"][2])
+    
+    with col4:
+        st.header(top_similar["ids"][3])
+        st.image(top_similar["names"][3])
+
+    with col5:
+        st.header(top_similar["ids"][4])
+        st.image(top_similar["names"][4])
 
 
 if __name__ == "__main__":
