@@ -1,0 +1,13 @@
+version: '3'
+services:
+  web:
+    container_name: landmarks-web-alone
+    env_file:
+      - web.env
+    build: .
+    command: streamlit run web.py
+    ports:
+      - "5234:8501"
+    volumes:
+      - ./:/landmarks_app
+      - ../data:/data

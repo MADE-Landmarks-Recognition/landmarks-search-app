@@ -1,22 +1,17 @@
 import os
+import requests
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 from PIL import Image
 
-from src.model import Recognizer
-
 
 # config
-IMG_DIR = "./data/train10k/"
-UPL_DIR = "./data/uploaded/"
-IMG_SIZE = 224
-TOP_K = 5
-DEVICE = "cuda"
-CHECKPOINT_PATH = "./checkpoints/extractor.torchscript"
-DUMP_PATH = "./checkpoints/landmarks_db"
-MAPPING_PATH = "./checkpoints/id_to_name.mapping"
+IMG_DIR = "../data/train10k/"                    # common data for all services
+UPL_DIR = "./data/uploaded/"                     # upload dir just for web part
+TOP_K = 5                                        # api service provide top 5 now
+API_ENDPOINT = os.getenv("API_ENDPOINT_LOCAL")   # local api for testing
 
 
 if not os.path.exists(UPL_DIR):
@@ -28,33 +23,39 @@ st.set_page_config(
 )
 
 
-@st.cache(allow_output_mutation=True)
-def load_model():
-    return Recognizer(CHECKPOINT_PATH, DUMP_PATH, MAPPING_PATH, DEVICE, (IMG_SIZE, IMG_SIZE))
-
-
 def get_image(path):
     image = Image.open(path).convert("RGB")
     return image
 
 
-def st_get_top_similar(
-    image: np.ndarray,
-    recognizer: Recognizer,
-    k=TOP_K,
-):
-    sims, ids, paths, names = recognizer.find_similar(image, k=k)
-    paths = [f"{IMG_DIR}{path[0]}/{path[1]}/{path[2]}/{path}" for path in paths[0]]
-    top_similar = {"paths": paths, "ids": ids[0], "names": names}
+def get_top_similar(image, k):
+    """
+        send request to landmarks-api service
+            {
+                "top_k": top k images (now provided top 5)
+                "size": image size (need for recovering image from bytes)
+                "image": image in bytes
+            }
+        get top similar json
+            {
+                "ids": [],
+                "names": [],
+                "paths": []
+            }
+    """
+    data = {
+        'top_k': k,
+        'size': image.size,
+        'image': image.tobytes().decode("latin-1")
+    }
+    response = requests.post(url=API_ENDPOINT, json=data, timeout=20)
+    top_similar = response.json()
     return top_similar
 
 
 def main():
     st.title("Landmarks retrieval")
     st.subheader("MADE-2022")
-
-    ### Load artifacts
-    recognizer = load_model()
 
     ### Load image
     image_file = st.file_uploader("Upload your Image", type=["jpg", "png", "jpeg"])
@@ -74,7 +75,9 @@ def main():
             use_column_width=True,
         )
 
-    top_similar = st_get_top_similar(image, recognizer, k=TOP_K)
+    # api service part
+    top_similar = get_top_similar(image, k=TOP_K)
+
     with col2:
         st.write("Top similar:")
         df = pd.DataFrame(top_similar, columns=('ids', 'names'))

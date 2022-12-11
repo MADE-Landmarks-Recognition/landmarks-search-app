@@ -1,0 +1,13 @@
+version: '3'
+services:
+  bot:
+    container_name: landmarks-bot-alone
+    env_file:
+      - bot.env
+    build: .
+    command: python bot.py
+    ports:
+      - 8081:8081
+    volumes:
+      - ./:/landmarks_app
+      - ../data:/data
