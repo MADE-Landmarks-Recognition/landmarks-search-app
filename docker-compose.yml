@@ -1,7 +1,7 @@
 version: '3'
 services:
   api:
-    container_name: landmarks-api
+    container_name: landmarks_api
     build: ./api
     environment:
       - FLASK_APP=api.py
@@ -25,7 +25,7 @@ services:
               - utility # nvidia-smi
               - compute # CUDA. Required to avoid "CUDA version: N/A"
   web:
-    container_name: landmarks-web
+    container_name: landmarks_web
     env_file:
       - ./web/web.env
     build: ./web
@@ -38,7 +38,7 @@ services:
       - ./web:/landmarks_app
       - ./data:/data
   bot:
-    container_name: landmarks-bot
+    container_name: landmarks_bot
     env_file:
       - ./bot/bot.env
     build: ./bot
