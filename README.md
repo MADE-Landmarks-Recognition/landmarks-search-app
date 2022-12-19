@@ -1,5 +1,17 @@
 # landmarks-search-app
 
+# How to run
+## Install requirements (for example, via poetry)
+poetry install
+
+## Locally
+streamlit run landmarks_app.py
+
+## With Docker (check that CUDA available or use another base image)
+docker compose up (--build)
+
+# Download checkpoints
+- [DeiT Roadmap on 10k landmarks](https://drive.google.com/file/d/1VNXP6X7YCUmzR9QGnm0Gwxy6MW3DHrOw/view?usp=share_link)
 
 # Metrics
 ## Image recognition 10k
@@ -39,4 +51,4 @@
 | 497       	| EffB7 	| 256      	| -     	| 0.851 	| 0.847 	| 0.855 	| 0.861 	| 0.847       	| 0.823       	| 0.811       	| < 8 Gb         	|
 | 249       	| EffB7 	| 512      	| -     	| 0.969 	| 0.972 	| 0.976 	| 0.977 	| 0.972       	| 0.935       	| 0.880       	| < 8 Gb       	|
 | 102       	| EffB7 	| 512      	| -     	| 0.971 	| 0.970 	| 0.975 	| 0.976 	| 0.970       	| 0.951       	| 0.926       	| < 8 Gb       	|
-	
+=======

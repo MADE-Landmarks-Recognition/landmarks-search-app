@@ -1,0 +1,56 @@
+version: '3'
+services:
+  api:
+    container_name: landmarks_api
+    build: ./api
+    environment:
+      - FLASK_APP=api.py
+      - FLASK_DEBUG=1
+      - PYTHONBUFFERED=True
+    command: poetry run gunicorn -b 0.0.0.0:5000 api:app --reload
+    ports:
+      - "5235:5000"
+    networks:
+      - landmarks-net
+    volumes:
+      - ./api:/landmarks_app
+      - ./data:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities:
+              - gpu
+              - utility # nvidia-smi
+              - compute # CUDA. Required to avoid "CUDA version: N/A"
+  web:
+    container_name: landmarks_web
+    env_file:
+      - ./web/web.env
+    build: ./web
+    command: streamlit run web.py
+    ports:
+      - "5234:8501"
+    networks:
+      - landmarks-net
+    volumes:
+      - ./web:/landmarks_app
+      - ./data:/data
+  bot:
+    container_name: landmarks_bot
+    env_file:
+      - ./bot/bot.env
+    build: ./bot
+    command: python bot.py
+    ports:
+      - 8081:8081
+    networks:
+      - landmarks-net
+    volumes:
+      - ./bot:/landmarks_app
+      - ./data:/data
+
+networks:
+  landmarks-net:
+    driver: bridge
