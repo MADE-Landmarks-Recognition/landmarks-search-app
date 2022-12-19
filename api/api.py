@@ -1,5 +1,3 @@
-import io
-
 import numpy as np
 from PIL import Image
 from flask import Flask, request
@@ -9,12 +7,12 @@ from src.model import Recognizer
 
 
 # config
-IMG_DIR = "../data/train10k/" # common data for all services
+IMG_DIR = "../data/filtered/" # common data for all services
 TOP_K = 5                     # api service provide top 5 now
 IMG_SIZE = 224
 DEVICE = "cuda"
 CHECKPOINT_PATH = "./checkpoints/extractor.torchscript"
-DUMP_PATH = "./checkpoints/landmarks_db"
+DUMP_PATH = "./checkpoints/landmarks_filtered_db"
 MAPPING_PATH = "./checkpoints/id_to_name.mapping"
 
 

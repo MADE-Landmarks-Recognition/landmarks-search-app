@@ -1,6 +1,4 @@
 import os
-import asyncio
-
 import requests
 from PIL import Image
 from aiogram import Bot, Dispatcher, executor, filters, types
@@ -9,7 +7,7 @@ from aiogram import Bot, Dispatcher, executor, filters, types
 API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
 
 # config
-IMG_DIR = "../data/train10k/"                    # common data for all services
+IMG_DIR = "../data/filtered/"                    # common data for all services
 UPL_DIR = "./data/uploaded/"                     # upload dir just for web part
 TOP_K = 5                                        # api service provide top 5 now
 API_ENDPOINT = os.getenv("API_ENDPOINT_LOCAL")   # local api for testing
@@ -56,8 +54,9 @@ def get_top_similar(image, k):
 @dp.message_handler(filters.CommandStart())
 async def send_welcome(message: types.Message):
     greeting = f"Привет, {message.from_user.first_name}!\n"
-    msg_info = f"Загрузи фотку достопримечательности, и я попробую ее определить или найти похожие на нее."
-    await message.reply(greeting + msg_info)
+    msg_info_1 = f"Загрузи фотку достопримечательности, и я попробую ее определить или найти похожие на нее.\n"
+    msg_info_2 = "Ответ в формате: 5 картинок + подписи к ним, 'id': 'название'"
+    await message.reply(greeting + msg_info_1 + msg_info_2)
 
 
 @dp.message_handler(content_types=['photo'])
@@ -84,7 +83,7 @@ async def get_landmarks(message: types.Message):
         for idx in range(TOP_K):
             media.attach_photo(
                 types.InputFile(top_similar["paths"][idx]),
-                str(top_similar["ids"][idx]) + ": " + top_similar["names"][idx]
+                str(top_similar["ids"][idx]) + ": " + top_similar["names"][idx].strip().replace("_", " ")
             )
 
         # Done! Send media group

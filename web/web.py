@@ -1,17 +1,17 @@
 import os
 import requests
-
-import numpy as np
 import pandas as pd
 import streamlit as st
 from PIL import Image
+# import re
 
 
 # config
-IMG_DIR = "../data/train10k/"                    # common data for all services
+IMG_DIR = "../data/filtered/"                    # common data for all services
 UPL_DIR = "./data/uploaded/"                     # upload dir just for web part
 TOP_K = 5                                        # api service provide top 5 now
-API_ENDPOINT = os.getenv("API_ENDPOINT_LOCAL")   # local api for testing
+API_ENDPOINT = os.getenv("API_ENDPOINT_LOCAL")   # API_ENDPOINT_LOCAL local api for testing
+MAX_SIZE = (256, 256)
 
 
 if not os.path.exists(UPL_DIR):
@@ -22,9 +22,20 @@ st.set_page_config(
     page_title="Landmarks"
 )
 
+hide_img_fs = '''
+<style>
+button[title="View fullscreen"]{
+    visibility: hidden;}
+</style>
+'''
 
-def get_image(path):
+st.markdown(hide_img_fs, unsafe_allow_html=True)
+
+
+def get_image(path, resize=True):
     image = Image.open(path).convert("RGB")
+    if resize:
+        image = image.resize(MAX_SIZE, Image.Resampling.BICUBIC)
     return image
 
 
@@ -54,57 +65,85 @@ def get_top_similar(image, k):
 
 
 def main():
-    st.title("Landmarks retrieval")
-    st.subheader("MADE-2022")
 
     ### Load image
-    image_file = st.file_uploader("Upload your Image", type=["jpg", "png", "jpeg"])
-    if not image_file:
-        return None
-    image = Image.open(image_file)
-    save_path = os.path.join(UPL_DIR, image_file.name)
-    image.save(save_path)
+    with st.sidebar:
+        st.title("Landmarks retrieval")
+        st.subheader("MADE-2022")
+        image_file = st.file_uploader("Upload your Image", type=["jpg", "png", "jpeg"])
+        if not image_file:
+            return None
+        image = Image.open(image_file)
+        save_path = os.path.join(UPL_DIR, image_file.name)
+        image.save(save_path)
+        st.write(f"Image uploaded: : {image_file.name}")
+        TOP_K = st.selectbox('Number of images to retrieve: ', (1, 3, 5))
+        grid_option = st.selectbox('Set grid width', (False, True))
 
-    col1, col2 = st.columns(2)
 
-    # check that all is ok
-    image = get_image(save_path)
+    with st.container():
+        col1, col2 = st.columns(2, gap="small")
+    
+        # check that all is ok
+        image = get_image(save_path)
+
+    # Output original    
     with col1:
+        st.subheader("Original image: ")
         st.image(
-            image, caption=f"Uploaded Image: {image_file.name}",
-            use_column_width=True,
-        )
-
+            image, caption=f"Uploaded Image: {image_file.name}", 
+            use_column_width=grid_option,)
+    
     # api service part
-    top_similar = get_top_similar(image, k=TOP_K)
+    top_similar = get_top_similar(image, TOP_K)
 
-    with col2:
+    # print table to sidebar
+    with st.sidebar:
         st.write("Top similar:")
         df = pd.DataFrame(top_similar, columns=('ids', 'names'))
-        st.dataframe(df, use_container_width=False)
-
-    # st.image(top_similar["paths"], top_similar["ids"], width=224)
-    col1, col2, col3, col4, col5 = st.columns(5)
-
-    with col1:
-        st.image(top_similar["paths"][0])
-        st.write(top_similar["ids"][0])
-
-    with col2:
-        st.image(top_similar["paths"][1])
-        st.write(top_similar["ids"][1])
-
-    with col3:
-        st.image(top_similar["paths"][2])
-        st.write(top_similar["ids"][2])
+        st.dataframe(df, use_container_width=True)
     
-    with col4:
-        st.image(top_similar["paths"][3])
-        st.write(top_similar["ids"][3])
+    # print location
+    # uncomment and make sure the csv contains scrapped info for the full DS
+    no_print = False
+    if no_print:
+        try:
+            df1 = pd.read_csv('../data/extracted10000_3col.csv')
+            id = df.ids[0]
+            land_location = df1[df1.id == id]['Location'].to_string()
+            l_new = ' '.join(land_location.split()[1:])
+            st.text(l_new)
 
-    with col5:
-        st.image(top_similar["paths"][4])
-        st.write(top_similar["ids"][4])
+            ### extract country
+            
+            # country = re.findall('.[^A-Z]*', l_new)[-1]
+            # alternatively without re
+            # country = "".join([(" "+i if i.isupper() else i) for i in l_new]).strip().split()[-1] 
+            # st.text(country)
+        except:
+            pass
+
+    # top retrieval 
+    with col2:
+        st.subheader("Top retrieval: ")
+        im = get_image(top_similar['paths'][0])
+        cap = df['names'][0].strip().replace("_", " ")
+        st.image(im, caption=cap, use_column_width=grid_option, width = MAX_SIZE[1])
+  
+    # retrieved images output
+    st.subheader("Retrieved images: ")
+
+    c1, c2 = st.columns([1,1], gap="small")
+    for i in range(1, TOP_K):
+        im = get_image(top_similar['paths'][i])
+        cap = df['names'][i].strip().replace("_", " ")
+        if i % 2 != 0:
+            
+            with c1:
+                st.image(im, caption=[cap], use_column_width=grid_option, width = MAX_SIZE[1])
+        else:
+            with c2:
+                st.image(im, caption=[cap], use_column_width=grid_option, width = MAX_SIZE[1])
 
 
 if __name__ == "__main__":
