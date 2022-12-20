@@ -39,7 +39,7 @@ Project Organization
 
 
 # How to run
-## Download dataset
+## Download dataset (based on [Google Landmarks Dataset v2](https://github.com/cvdfoundation/google-landmark))
 - [Filtered clean dataset](https://cloud.mail.ru/public/ZsDS/jJkPRKKDd)
 
 ## Download checkpoints
