@@ -11,6 +11,7 @@ IMG_DIR = "../data/filtered/"                    # common data for all services
 UPL_DIR = "./data/uploaded/"                     # upload dir just for web part
 TOP_K = 5                                        # api service provide top 5 now
 API_ENDPOINT = os.getenv("API_ENDPOINT_LOCAL")   # local api for testing
+MAX_SIZE = (256, 256)
 
 
 if not os.path.exists(UPL_DIR):
@@ -21,8 +22,10 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 
-def get_image(path):
+def get_image(path, resize=True):
     image = Image.open(path).convert("RGB")
+    if resize:
+        image = image.resize(MAX_SIZE, Image.Resampling.BILINEAR)
     return image
 
 
@@ -59,19 +62,27 @@ async def send_welcome(message: types.Message):
     await message.reply(greeting + msg_info_1 + msg_info_2)
 
 
-@dp.message_handler(content_types=['photo'])
+@dp.message_handler(content_types=['photo', 'document'])
 async def get_landmarks(message: types.Message):
 
-    PhotoSize = message.photo[-1]
-    file_info = await bot.get_file(PhotoSize.file_id)
+    if message.photo:
+        PhotoSize = message.photo[-1]
+        file_info = await bot.get_file(PhotoSize.file_id)
+    elif message.document:
+        file_id = message.document.file_id
+        file_info = await bot.get_file(file_id)
 
     if file_info.file_path.lower().endswith(('.png', '.jpg', '.jpeg')):
 
         await message.reply("Секундочку...")
 
-        await PhotoSize.download(destination_dir=UPL_DIR)
-
         save_path = UPL_DIR + file_info.file_path
+
+        if message.photo:
+            await PhotoSize.download(destination_dir=UPL_DIR)
+        elif message.document:
+            await bot.download_file(file_info.file_path, save_path)
+
         image = get_image(save_path)
         top_similar = get_top_similar(image, k=TOP_K)
 
