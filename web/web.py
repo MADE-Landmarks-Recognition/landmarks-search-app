@@ -35,7 +35,7 @@ st.markdown(hide_img_fs, unsafe_allow_html=True)
 def get_image(path, resize=True):
     image = Image.open(path).convert("RGB")
     if resize:
-        image = image.resize(MAX_SIZE, Image.Resampling.BICUBIC)
+        image = image.resize(MAX_SIZE, Image.Resampling.BILINEAR)
     return image
 
 
@@ -102,7 +102,7 @@ def main():
         st.write("Top similar:")
         df = pd.DataFrame(top_similar, columns=('ids', 'names'))
         st.dataframe(df, use_container_width=True)
-    
+
     # print location
     # uncomment and make sure the csv contains scrapped info for the full DS
     no_print = False
@@ -123,13 +123,13 @@ def main():
         except:
             pass
 
-    # top retrieval 
+    # top retrieval
     with col2:
         st.subheader("Top retrieval: ")
         im = get_image(top_similar['paths'][0])
         cap = df['names'][0].strip().replace("_", " ")
         st.image(im, caption=cap, use_column_width=grid_option, width = MAX_SIZE[1])
-  
+
     # retrieved images output
     st.subheader("Retrieved images: ")
 
