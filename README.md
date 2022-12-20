@@ -42,8 +42,8 @@ Project Organization
 ## Download dataset (based on [Google Landmarks Dataset v2](https://github.com/cvdfoundation/google-landmark))
 - [Filtered clean dataset](https://cloud.mail.ru/public/ZsDS/jJkPRKKDd)
 
-## Download checkpoints
-- [DeiT Roadmap on 10k landmarks](https://cloud.mail.ru/public/FiL9/fa79wiv78)
+## Download checkpoints and artifacts
+- [DeiT Roadmap, faiss index, landmarks mapping](https://cloud.mail.ru/public/FiL9/fa79wiv78)
 
 ## Run with Docker (check that CUDA available or use another base image)
 ```
